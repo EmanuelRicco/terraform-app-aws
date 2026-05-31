@@ -1,8 +1,5 @@
-variable "api_key" {
-  sensitive = true
-}
-variable "region" {
-  description = "Região usada para criar os recursos na magalu"
+variable "aws_region" {
+  description = "Região usada para criar os recursos na AWS"
   type        = string
-  default     = "br-se1"
+  default     = "sa-east-1"
 }

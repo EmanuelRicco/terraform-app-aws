@@ -4,4 +4,4 @@ app = FastAPI()
 
 @app.get("/")
 async def read_root():
-    return {"message": "App em docker rodando com sucesso em na magalu cloud!"}
+    return {"message": "FastAPI rodando na AWS com sucesso em uma instância EC2 com Docker!"}

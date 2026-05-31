@@ -1,0 +1,36 @@
+#!/bin/bash
+
+apt-get update
+apt-get install -y ca-certificates curl gnupg
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture ) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME" ) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable --now docker
+usermod -aG docker ubuntu
+
+mkdir -p /home/ubuntu/app
+cd /home/ubuntu/app
+
+
+cat << 'EOF' > app.py
+${app_py}
+EOF
+
+cat << 'EOF' > Dockerfile
+${dockerfile}
+EOF
+
+cat << 'EOF' > requirements.txt
+${requirements}
+EOF
+
+
+chown -R ubuntu:ubuntu /home/ubuntu/app
+
+
+sleep 5
+docker build -t minha-app .
+docker run -d --name web-app -p 80:8000 minha-app

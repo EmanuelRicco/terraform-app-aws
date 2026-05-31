@@ -1,13 +1,18 @@
 terraform {
   required_version = ">= 1.0"
   required_providers {
-    mgc = {
-      source = "magalucloud/mgc"
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.47.0"
     }
   }
 }
-
-provider "mgc" {
-  api_key = var.api_key
-  region  = var.region
+provider "aws" {
+  region = var.aws_region
+  default_tags {
+    tags = {
+      owner      = "emanuel"
+      maneged_by = "terraform"
+    }
+  }
 }

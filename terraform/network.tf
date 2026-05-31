@@ -1,93 +1,98 @@
-resource "mgc_network_vpcs" "vpc_app" {
-  name        = "vpc-app"
-  description = "VPC para aplicacao"
+resource "aws_vpc" "app_vpc" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "app-vpc"
+  }
 }
 
-resource "mgc_network_subnetpools" "subnetpool_app" {
-  name        = "subnetpool-app"
-  description = "Subnet Pool para aplicacao"
-  cidr        = "172.26.0.0/16"
+resource "aws_subnet" "subnet_app" {
+  vpc_id                  = aws_vpc.app_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "subnet-app-public"
+  }
 }
 
-resource "mgc_network_vpcs_subnets" "subnet_app" {
-  cidr_block      = "172.26.1.0/24"
-  description     = "Subnet para aplicacao"
-  dns_nameservers = ["8.8.8.8", "8.8.4.4"]
-  ip_version      = "IPv4"
-  name            = "subnet-app"
-  subnetpool_id   = mgc_network_subnetpools.subnetpool_app.id
-  vpc_id          = mgc_network_vpcs.vpc_app.id
+resource "aws_internet_gateway" "igw_app" {
+  vpc_id = aws_vpc.app_vpc.id
+
+  tags = {
+    Name = "igw-app"
+  }
 }
 
-resource "mgc_network_vpcs_interfaces" "interface_app" {
-  name   = "interface-app"
-  vpc_id = mgc_network_vpcs.vpc_app.id
+resource "aws_route_table" "route_table_app" {
+  vpc_id = aws_vpc.app_vpc.id
 
-  depends_on = [mgc_network_vpcs_subnets.subnet_app]
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw_app.id
+  }
+
+  tags = {
+    Name = "rt-app-public"
+  }
 }
 
-resource "mgc_network_security_groups" "sg_app" {
-  name                  = "sg-app"
-  description           = "Security Group para aplicacao"
-  disable_default_rules = false
+resource "aws_route_table_association" "route_table_assoc_app" {
+  subnet_id      = aws_subnet.subnet_app.id
+  route_table_id = aws_route_table.route_table_app.id
 }
 
-resource "mgc_network_security_groups_rules" "entrada_http" {
-  description       = "Entrada HTTP para aplicacao"
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  port_range_min    = 80
-  port_range_max    = 80
+resource "aws_security_group" "sg_app" {
+  name        = "sgapp"
+  description = "Security group para a aplicacao"
+  vpc_id      = aws_vpc.app_vpc.id
+}
+
+resource "aws_security_group_rule" "ssh" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
   protocol          = "tcp"
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = mgc_network_security_groups.sg_app.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.sg_app.id
+  description       = "Acesso SSH"
 }
 
-
-resource "mgc_network_security_groups_rules" "entrada_https" {
-  description       = "Entrada HTTPS para aplicacao"
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  port_range_min    = 443
-  port_range_max    = 443
+resource "aws_security_group_rule" "http" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
   protocol          = "tcp"
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = mgc_network_security_groups.sg_app.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.sg_app.id
+  description       = "Acesso HTTP"
 }
 
-resource "mgc_network_security_groups_rules" "entrada_ssh" {
-  description       = "Entrada SSH para aplicacao"
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  port_range_min    = 22
-  port_range_max    = 22
+resource "aws_security_group_rule" "https" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
   protocol          = "tcp"
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = mgc_network_security_groups.sg_app.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.sg_app.id
+  description       = "Acesso HTTPS"
 }
 
-resource "mgc_network_security_groups_rules" "acesso_app" {
-  description       = "Acesso a aplicacao na porta 8000"
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  port_range_min    = 8000
-  port_range_max    = 8000
+resource "aws_security_group_rule" "app_port" {
+  type              = "ingress"
+  from_port         = 8000
+  to_port           = 8000
   protocol          = "tcp"
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = mgc_network_security_groups.sg_app.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.sg_app.id
+  description       = "Acesso a API na porta 8000"
 }
 
-resource "mgc_network_security_groups_attach" "attach_sg_app" {
-  security_group_id = mgc_network_security_groups.sg_app.id
-  interface_id      = mgc_network_vpcs_interfaces.interface_app.id
-}
-
-resource "mgc_network_public_ips" "public_ip_app" {
-  description = "Public IP para aplicacao"
-  vpc_id      = mgc_network_vpcs.vpc_app.id
-}
-
-resource "mgc_network_public_ips_attach" "app_ip_attachment" {
-  public_ip_id = mgc_network_public_ips.public_ip_app.id
-  interface_id = mgc_network_vpcs_interfaces.interface_app.id
+resource "aws_security_group_rule" "allow_all_outbound" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.sg_app.id
 }
