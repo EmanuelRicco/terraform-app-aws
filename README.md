@@ -1,119 +1,253 @@
+# Terraform AWS Docker App Deploy
 
-Terraform AWS Docker App Deploy
+Este repositório contém uma solução de **Infraestrutura como Código (IaC)** utilizando **Terraform** para provisionar uma aplicação Dockerizada em uma instância EC2 na **Amazon Web Services (AWS)**.
 
-Este repositório contém uma solução de Infraestrutura como Código (IaC) utilizando Terraform para provisionar uma aplicação Dockerizada em uma instância EC2 na Amazon Web Services (AWS). A arquitetura inclui uma Virtual Private Cloud (VPC) completa, com sub-redes públicas, Internet Gateway e Security Groups configurados para acesso à aplicação e SSH.
+A arquitetura provisiona uma **VPC completa**, incluindo sub-redes públicas, Internet Gateway, tabelas de rotas e Security Groups configurados para permitir acesso à aplicação e administração via SSH.
 
-🚀 Visão Geral da Arquitetura
+---
 
-A infraestrutura provisionada por este projeto consiste em:
+## 🚀 Visão Geral da Arquitetura
 
-•
-Virtual Private Cloud (VPC): Uma rede virtual isolada na AWS com um bloco CIDR 10.0.0.0/16.
+A infraestrutura criada por este projeto é composta pelos seguintes recursos:
 
-•
-Sub-rede Pública: Uma sub-rede (10.0.1.0/24) dentro da VPC, configurada para atribuir IPs públicos automaticamente às instâncias lançadas nela.
+### 🌐 Virtual Private Cloud (VPC)
 
-•
-Internet Gateway (IGW): Permite a comunicação entre a VPC e a internet.
+Rede virtual isolada na AWS utilizando o bloco CIDR:
 
-•
-Tabela de Rotas: Associada à sub-rede pública, direciona o tráfego externo (0.0.0.0/0) para o Internet Gateway.
+```text
+10.0.0.0/16
+```
 
-•
-Security Group (sg_app): Atua como um firewall virtual para a instância EC2, permitindo tráfego de entrada nas portas:
+### 🔹 Sub-rede Pública
 
-•
-22 (SSH) - para acesso administrativo.
+Sub-rede configurada dentro da VPC:
 
-•
-80 (HTTP) - para acesso à aplicação web.
+```text
+10.0.1.0/24
+```
 
-•
-443 (HTTPS) - para acesso seguro à aplicação web.
+Características:
 
-•
-8000 (Custom App Port) - para a porta interna da aplicação.
+* Atribuição automática de IP público para instâncias.
+* Comunicação com a Internet através do Internet Gateway.
 
-•
-Tráfego de saída (egress) totalmente liberado para permitir que a instância baixe atualizações e se comunique com serviços externos.
+### 🌍 Internet Gateway (IGW)
 
-•
-Instância EC2: Uma máquina virtual Ubuntu (t2.micro) onde a aplicação Dockerizada será executada.
+Permite que os recursos da VPC se comuniquem com a Internet.
 
-•
-Chave SSH: Um par de chaves SSH para acesso seguro à instância EC2.
+### 🛣️ Tabela de Rotas
 
-•
-User Data Script: Um script bash executado na inicialização da instância EC2 para:
+Associada à sub-rede pública e configurada para encaminhar o tráfego externo:
 
-•
-Instalar o Docker.
+```text
+0.0.0.0/0 → Internet Gateway
+```
 
-•
-Copiar os arquivos da aplicação (app.py, Dockerfile, requirements.txt).
+### 🔒 Security Group
 
-•
-Construir a imagem Docker da aplicação.
+O Security Group da aplicação atua como firewall virtual da instância EC2.
 
-•
-Executar o container Docker, mapeando a porta 8000 do container para a porta 80 da instância.
+#### Regras de Entrada (Ingress)
 
+| Porta | Protocolo | Descrição  |
+| ----- | --------- | ---------- |
+| 22    | TCP       | Acesso SSH |
+| 80    | TCP       | HTTP       |
+| 443   | TCP       | HTTPS      |
+| 8000  | TCP       | Aplicação  |
 
+#### Regras de Saída (Egress)
 
-💻 Tecnologias Utilizadas
+Todo o tráfego de saída é permitido para possibilitar:
 
-•
-Terraform: Para provisionamento e gerenciamento da infraestrutura como código.
+* Atualizações do sistema operacional;
+* Download de dependências;
+* Comunicação com serviços externos.
 
-•
-AWS: Provedor de nuvem para hospedar a infraestrutura.
+### 🖥️ Instância EC2
 
-•
-Docker: Para conteinerização da aplicação.
+Instância Ubuntu utilizada para hospedar a aplicação Dockerizada.
 
-•
-Python: Linguagem da aplicação usada para API.
+**Tipo da instância:**
 
-•
-Ubuntu: Sistema operacional da instância EC2.
+```text
+t2.micro
+```
 
-📂 Estrutura do Projeto
+### 🔑 Chave SSH
 
+Par de chaves utilizado para acesso seguro à instância EC2.
+
+### ⚙️ User Data
+
+Durante a inicialização da instância, um script automatizado realiza:
+
+* Instalação do Docker;
+* Cópia dos arquivos da aplicação;
+* Build da imagem Docker;
+* Inicialização do container.
+
+Mapeamento de portas:
+
+```text
+Container: 8000
+Host EC2: 80
+```
+
+---
+
+## 💻 Tecnologias Utilizadas
+
+* Terraform
+* AWS
+* Docker
+* Python
+* Ubuntu Linux
+
+---
+
+## 📂 Estrutura do Projeto
+
+```text
 .
 ├── app/
-│   ├── app.py              # Codigo da aplicacao Python
-│   ├── Dockerfile          # Dockerfile para construir a imagem da aplicacao
-│   └── requirements.txt    # Dependencias Python da aplicacao
+│   ├── app.py
+│   ├── Dockerfile
+│   └── requirements.txt
+│
 ├── terraform/
-│   ├── compute.tf          # Configuracao da instancia EC2 e chave SSH
-│   ├── network.tf          # Configuracao da VPC, sub-rede, IGW e tabelas de rotas
-│   ├── outputs.tf          # Saidas uteis apos o deploy (IP, DNS, comando SSH)
-│   ├── variables.tf        # Variaveis de configuracao do Terraform
+│   ├── compute.tf
+│   ├── network.tf
+│   ├── outputs.tf
+│   ├── variables.tf
 │   └── script/
-│       └── docker_install.sh # Script para instalar Docker e rodar a aplicacao
+│       └── docker_install.sh
+│
 └── README.md
+```
 
+### Descrição dos Arquivos
 
-⚙️ Pré-requisitos
+| Arquivo           | Descrição                            |
+| ----------------- | ------------------------------------ |
+| app.py            | Código-fonte da aplicação            |
+| Dockerfile        | Build da imagem Docker               |
+| requirements.txt  | Dependências Python                  |
+| compute.tf        | Instância EC2 e chave SSH            |
+| network.tf        | Recursos de rede                     |
+| outputs.tf        | Saídas do Terraform                  |
+| variables.tf      | Variáveis do projeto                 |
+| docker_install.sh | Instala Docker e executa a aplicação |
 
-Antes de iniciar, certifique-se de ter os seguintes itens instalados e configurados:
+---
 
-•
-AWS CLI: Configurado com credenciais de acesso à sua conta AWS.
+## ⚙️ Pré-requisitos
 
-•
-Terraform: Versão 1.0 ou superior.
+Antes de iniciar, certifique-se de possuir:
 
-•
-Chave SSH: Um par de chaves SSH configurado em ~/.ssh/ na sua máquina local. O Terraform usará a chave pública para criar o aws_key_pair e você usará a chave privada para acessar a instância.
+### AWS CLI
 
+Instalada e configurada com credenciais válidas:
 
-⚠️ Considerações de Segurança
+```bash
+aws configure
+```
 
-Este projeto foi configurado com regras de Security Group que permitem acesso de 0.0.0.0/0 (qualquer IP) para SSH, HTTP, HTTPS e a porta 8000. Esta configuração é adequada para ambientes de teste e desenvolvimento.
+### Terraform
 
-Para ambientes de produção, é altamente recomendável restringir o acesso a IPs específicos ou a outros Security Groups para SSH e portas de aplicação, seguindo o princípio do menor privilégio. Por exemplo, para SSH, você deve permitir acesso apenas do IP da sua máquina ou da rede da sua VPN.
+Versão mínima recomendada:
 
+```text
+Terraform >= 1.0
+```
 
+### Chave SSH
 
+Um par de chaves SSH configurado em sua máquina local:
 
+```text
+~/.ssh/id_rsa
+~/.ssh/id_rsa.pub
+```
+
+O Terraform utilizará a chave pública para criar o recurso `aws_key_pair`, enquanto a chave privada será usada para acessar a instância EC2.
+
+---
+
+## 🚀 Deploy da Infraestrutura
+
+Inicialize o Terraform:
+
+```bash
+terraform init
+```
+
+Visualize o plano de execução:
+
+```bash
+terraform plan
+```
+
+Crie a infraestrutura:
+
+```bash
+terraform apply
+```
+
+Ao final do processo, o Terraform exibirá:
+
+* IP público da instância;
+* DNS público;
+* Comando SSH para acesso.
+
+---
+
+## 🔍 Acessando a Aplicação
+
+Após o provisionamento, acesse:
+
+```text
+http://<IP_PUBLICO>
+```
+
+Ou:
+
+```text
+http://<DNS_PUBLICO>
+```
+
+---
+
+## 🧹 Removendo a Infraestrutura
+
+Para destruir todos os recursos criados:
+
+```bash
+terraform destroy
+```
+
+---
+
+## ⚠️ Considerações de Segurança
+
+Atualmente, as portas SSH, HTTP, HTTPS e 8000 estão liberadas para:
+
+```text
+0.0.0.0/0
+```
+
+Essa configuração é adequada apenas para ambientes de laboratório, estudo e desenvolvimento.
+
+Para ambientes de produção, recomenda-se:
+
+* Restringir o SSH ao seu endereço IP ou VPN corporativa;
+* Limitar o acesso às portas da aplicação;
+* Utilizar Load Balancer com HTTPS;
+* Armazenar segredos em serviços como AWS Secrets Manager ou AWS Systems Manager Parameter Store;
+* Aplicar o princípio do menor privilégio em todos os recursos.
+
+---
+
+## 📄 Licença
+
+Este projeto foi desenvolvido para fins educacionais e de estudo de Terraform, AWS e Docker.
