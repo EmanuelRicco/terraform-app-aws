@@ -1,27 +1,15 @@
 resource "aws_vpc" "app_vpc" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "app-vpc"
-  }
 }
 
 resource "aws_subnet" "subnet_app" {
   vpc_id                  = aws_vpc.app_vpc.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-
-  tags = {
-    Name = "subnet-app-public"
-  }
 }
 
 resource "aws_internet_gateway" "igw_app" {
   vpc_id = aws_vpc.app_vpc.id
-
-  tags = {
-    Name = "igw-app"
-  }
 }
 
 resource "aws_route_table" "route_table_app" {
@@ -88,7 +76,7 @@ resource "aws_security_group_rule" "app_port" {
   description       = "Acesso a API na porta 8000"
 }
 
-resource "aws_security_group_rule" "allow_all_outbound" {
+resource "aws_security_group_rule" "regra_de_saida" {
   type              = "egress"
   from_port         = 0
   to_port           = 0

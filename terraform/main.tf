@@ -11,8 +11,8 @@ provider "aws" {
   region = var.aws_region
   default_tags {
     tags = {
-      owner      = "emanuel"
-      maneged_by = "terraform"
+      project    = "app-aws"
+      managed_by = "terraform"
     }
   }
 }
