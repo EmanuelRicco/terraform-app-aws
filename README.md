@@ -197,8 +197,6 @@ terraform apply
 Ao final do processo, o Terraform exibirá:
 
 * IP público da instância;
-* DNS público;
-* Comando SSH para acesso.
 
 ---
 
@@ -208,12 +206,6 @@ Após o provisionamento, acesse:
 
 ```text
 http://<IP_PUBLICO>
-```
-
-Ou:
-
-```text
-http://<DNS_PUBLICO>
 ```
 
 ---
@@ -228,26 +220,3 @@ terraform destroy
 
 ---
 
-## ⚠️ Considerações de Segurança
-
-Atualmente, as portas SSH, HTTP, HTTPS e 8000 estão liberadas para:
-
-```text
-0.0.0.0/0
-```
-
-Essa configuração é adequada apenas para ambientes de laboratório, estudo e desenvolvimento.
-
-Para ambientes de produção, recomenda-se:
-
-* Restringir o SSH ao seu endereço IP ou VPN corporativa;
-* Limitar o acesso às portas da aplicação;
-* Utilizar Load Balancer com HTTPS;
-* Armazenar segredos em serviços como AWS Secrets Manager ou AWS Systems Manager Parameter Store;
-* Aplicar o princípio do menor privilégio em todos os recursos.
-
----
-
-## 📄 Licença
-
-Este projeto foi desenvolvido para fins educacionais e de estudo de Terraform, AWS e Docker.
